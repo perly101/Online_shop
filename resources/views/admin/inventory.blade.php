@@ -15,9 +15,6 @@
     </div>
     <div class="id-tag">{{ session('admin_user_id', 'ADMIN') }}</div>
     <div class="header-actions">
-        <a href="{{ route('admin.management') }}" class="user-management-icon" title="Admin Management">
-            <i class="fas fa-users"></i>
-        </a>
         <form method="POST" action="{{ route('logout') }}" style="display:inline">
             @csrf
             <button type="submit" class="logout-icon" title="Logout" style="background:none;border:none;cursor:pointer">
@@ -37,6 +34,9 @@
     </a>
     <a href="{{ route('admin.analytics') }}" class="nav-tab">
         <i class="fas fa-chart-bar"></i> Analytics
+    </a>
+    <a href="{{ route('admin.management') }}" class="nav-tab">
+        <i class="fas fa-users"></i> Admins
     </a>
 </nav>
 
