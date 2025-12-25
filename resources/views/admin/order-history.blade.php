@@ -5,6 +5,12 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/admin-styles.css') }}">
 <style>
+/* Admin-only: hide native scrollbars while preserving scrolling */
+html, body { -ms-overflow-style: none; scrollbar-width: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.container, .customer-list-panel, .user-detail-panel, .order-history-list, .analytics-content { -ms-overflow-style: none; scrollbar-width: none; }
+.container::-webkit-scrollbar, .customer-list-panel::-webkit-scrollbar, .user-detail-panel::-webkit-scrollbar, .order-history-list::-webkit-scrollbar, .analytics-content::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
     .page-header {
         display: flex;
         align-items: center;
