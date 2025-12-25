@@ -9,7 +9,7 @@
   body{background:#fff;background-image:url('{{ asset('images/Backgound.png') }}');background-size:cover;background-position:center;background-repeat:no-repeat;background-attachment:fixed}
 
   /* header */
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 26px;background:linear-gradient(90deg,var(--gold1),var(--gold2));box-shadow:0 2px 6px rgba(0,0,0,0.08);position:fixed;top:0;left:0;right:0;width:100%;z-index:1000}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:linear-gradient(90deg,var(--gold1),var(--gold2));box-shadow:0 2px 6px rgba(0,0,0,0.08);position:fixed;top:0;left:0;right:0;width:100%;z-index:1000}
   .brand-section{display:flex;align-items:center;gap:12px}
   .brand{font-size:20px;font-weight:700}
   .icons{display:flex;gap:12px;align-items:center}
@@ -20,7 +20,7 @@
   #backBtn:hover{background:transparent}
 
   /* hero and overlay - same as shop-home */
-  .hero{position:fixed;top:72px;left:0;right:0;bottom:72px;padding:0;background:none;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+  .hero{position:fixed;top:56px;left:0;right:0;bottom:56px;padding:0;background:none;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
   .hero::-webkit-scrollbar{display:none}
   .hero{-ms-overflow-style:none;scrollbar-width:none}
   .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(rgba(255,244,200,0.60), rgba(255,244,200,0.60));mix-blend-mode:normal;pointer-events:none;z-index:1}
@@ -247,6 +247,7 @@
       <form id="checkoutForm" method="POST" action="{{ route('orders.store') }}">
         @csrf
         <input type="hidden" name="selected_items" id="checkout-selected-items" value="">
+        <input type="hidden" name="direct_item" id="checkout-direct-item" value="">
         <label for="contactName">Full Name</label>
         <input id="contactName" name="name" type="text" placeholder="Full Name" value="{{ auth()->user()->name }}" required>
         <label for="contactMobile">Mobile Number</label>
@@ -282,75 +283,13 @@
   </div>
 </div>
 
-<!-- Logout Confirmation Popup -->
-<div id="logoutPopup" class="popup-overlay">
-  <div class="popup-content">
-    <div class="popup-header">
-      <h3 id="logoutTitle">Confirm Logout</h3>
-      <button class="popup-close" id="logoutClose">&times;</button>
-    </div>
-    <div class="popup-message" id="logoutMessage">Are you sure you want to log out?</div>
-    <div class="popup-buttons">
-      <button class="popup-button" id="logoutNoBtn">No</button>
-      <button class="popup-button" id="logoutYesBtn" style="background: #ffd54a;">Yes</button>
-    </div>
-  </div>
-</div>
 
-<!-- Notifications Modal -->
-<div id="notificationsOverlay" class="notifications-overlay">
-  <div class="notifications-panel">
-    <div class="notifications-header">
-      <h2>Notifications</h2>
-      <button class="notifications-close" id="notificationsClose">✕</button>
-    </div>
-    <div class="notifications-content">
-      <ul class="notifications-list" id="notificationsList"></ul>
-      <div class="notification-empty" id="notificationsEmpty" style="display:none">
-        <i class="fa-solid fa-inbox"></i>
-        <p>No messages yet</p>
-        <p style="font-size:14px;color:#999;margin-top:8px;">Your notifications will appear here</p>
-      </div>
-    </div>
-    <div style="padding:10px 20px;border-top:1px solid #eee">
-      <button class="mark-all-read" id="markAllReadBtn">Mark All as Read</button>
-    </div>
-  </div>
-</div>
 
-<footer class="footer">
-  <div class="footer-left">
-    <span>0929 222 4309</span>
-    <span>Open - Closes 8:30 PM</span>
-  </div>
-  <div class="footer-right">
-    <div class="footer-icon" id="messagesIcon" title="Messages">
-      <i class="fa-solid fa-envelope"></i>
-      <span class="notification-dot" id="notificationDot"></span>
-    </div>
-    <div class="footer-icon" title="Profile" onclick="window.location='{{ route('profile.index') }}'">
-      <i class="fa-solid fa-user"></i>
-    </div>
-  </div>
-</footer>
 
-<!-- Sidebar -->
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-<div class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <div class="sidebar-title">Menu</div>
-    <button class="sidebar-close" id="sidebarClose">
-      <i class="fa-solid fa-xmark"></i>
-    </button>
-  </div>
-  <div class="sidebar-content">
-    <ul class="sidebar-menu">
-      <li><a href="#"><i class="fa-solid fa-phone"></i> Contact Us</a></li>
-      <li><a href="#"><i class="fa-solid fa-star"></i> Review Service</a></li>
-      <li><a href="#" id="logoutLink" style="color:#e74c3c"><i class="fa-solid fa-right-from-bracket"></i> Log Out</a></li>
-    </ul>
-  </div>
-</div>
+
+
+
+
 @endsection
 
 @push('scripts')
@@ -435,7 +374,7 @@ if (checkoutBtn) {
       // No selection: ask user whether to proceed with all
       if (!confirm('No items selected — do you want to checkout ALL items in your cart?')) return;
     }
-    openCheckoutOverlay(selectedIds);
+    openCheckoutOverlay({ selectedIds });
   });
 }
 
@@ -443,25 +382,42 @@ function formatPrice(v) {
   return `₱${Number(v).toFixed(2)}`; 
 }
 
-function openCheckoutOverlay(selectedIds = null) {
+function openCheckoutOverlay(opts = {}) {
   try {
     const overlay = document.getElementById('checkoutOverlay');
     const orderList = document.getElementById('orderList');
     const orderTotalPrice = document.getElementById('orderTotalPrice');
     const selectedInput = document.getElementById('checkout-selected-items');
+    const directInput = document.getElementById('checkout-direct-item');
 
     orderList.innerHTML = '';
     let total = 0;
 
     // Determine which items to show
     const items = [];
-    if (selectedIds && Array.isArray(selectedIds)) {
+    const selectedIds = opts.selectedIds || null;
+    const directItem = opts.directItem || null;
+
+    if (directItem) {
+      // use direct item provided via Buy Now
+      const it = Object.assign({}, directItem);
+      // ensure quantity and price are numbers
+      it.quantity = Number(it.quantity) || 1;
+      it.price = Number(it.price) || 0;
+      items.push(it);
+      // set direct hidden input
+      directInput.value = JSON.stringify(it);
+      // clear selected ids
+      selectedInput.value = '';
+    } else if (selectedIds && Array.isArray(selectedIds)) {
       Object.values(cartData).forEach(item => {
         if (selectedIds.indexOf(item.id) !== -1) items.push(item);
       });
+      directInput.value = '';
     } else {
       // all items
       Object.values(cartData).forEach(item => items.push(item));
+      directInput.value = '';
     }
 
     if (items.length === 0) {
@@ -472,7 +428,7 @@ function openCheckoutOverlay(selectedIds = null) {
         row.className = 'order-item';
 
         const name = document.createElement('div');
-        name.textContent = item.name + (item.flavor ? ` (${item.flavor})` : '') + ` x${item.quantity}`;
+        name.textContent = (item.name || item.product_name || 'Item') + (item.flavor ? ` (${item.flavor})` : '') + ` x${item.quantity}`;
 
         const price = document.createElement('div');
         const itemTotal = Number(item.price) * Number(item.quantity);
@@ -521,6 +477,12 @@ function closeCheckoutOverlay() {
     overlay.style.display = 'none';
     document.body.style.overflow = 'auto';
   }
+  // Clear any direct_item to avoid accidental reuse
+  const directInput = document.getElementById('checkout-direct-item');
+  if (directInput) directInput.value = '';
+  // Also clear selected items hidden
+  const selectedInput = document.getElementById('checkout-selected-items');
+  if (selectedInput) selectedInput.value = '';
 }
 
 // Custom Popup Functions
@@ -557,29 +519,7 @@ document.getElementById('customPopup').addEventListener('click', function(e) {
   }
 });
 
-// Logout Confirmation Functions
-function showLogoutConfirmation() {
-  document.getElementById('logoutPopup').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function hideLogoutConfirmation() {
-  document.getElementById('logoutPopup').style.display = 'none';
-  document.body.style.overflow = 'auto';
-}
-
-function handleLogout() {
-  window.location.href = '{{ route('logout') }}';
-}
-
-document.getElementById('logoutLink').addEventListener('click', function(e) {
-  e.preventDefault();
-  showLogoutConfirmation();
-});
-
-document.getElementById('logoutYesBtn').addEventListener('click', handleLogout);
-document.getElementById('logoutNoBtn').addEventListener('click', hideLogoutConfirmation);
-document.getElementById('logoutClose').addEventListener('click', hideLogoutConfirmation);
+// Logout is handled by the main layout; no local logout handlers here
 
 // Checkout overlay controls
 document.getElementById('checkoutClose').addEventListener('click', function(e) {
@@ -615,42 +555,69 @@ if (selectAll) {
   try {
     const params = new URLSearchParams(window.location.search);
     if (params.get('checkout') === '1') {
-      const productId = params.get('product_id');
-      const flavor = params.get('flavor') || '';
-
-      const findSelectedIds = () => {
-        const ids = [];
-        Object.values(cartData).forEach(item => {
-          if (String(item.product_id) === String(productId) && ((item.flavor || '') === flavor)) {
-            ids.push(item.id);
-          }
-        });
-        return ids;
-      };
-
-      // retry a few times in case cart data hasn't been refreshed yet
-      let attempts = 6;
-      const tryOpen = () => {
-        const selectedIds = findSelectedIds();
-        if (selectedIds.length > 0) {
-          openCheckoutOverlay(selectedIds);
-          // remove query params to avoid reopening on navigation
-          if (window.history && window.history.replaceState) {
-            const u = new URL(window.location.href);
-            u.searchParams.delete('checkout');
-            u.searchParams.delete('product_id');
-            u.searchParams.delete('flavor');
-            window.history.replaceState({}, '', u.toString());
-          }
-        } else if (attempts-- > 0) {
-          setTimeout(tryOpen, 250);
-        } else {
-          // fallback: open overlay with all items
-          openCheckoutOverlay();
+      const isDirect = params.get('direct') === '1';
+      if (isDirect) {
+        // Read direct item params
+        const direct = {
+          product_id: params.get('product_id'),
+          name: params.get('product_name') || '',
+          price: params.get('price') || '0',
+          quantity: params.get('quantity') || '1',
+          flavor: params.get('flavor') || '',
+          image: params.get('image') || ''
+        };
+        openCheckoutOverlay({ directItem: direct });
+        // remove query params to avoid reopening on navigation
+        if (window.history && window.history.replaceState) {
+          const u = new URL(window.location.href);
+          u.searchParams.delete('checkout');
+          u.searchParams.delete('direct');
+          u.searchParams.delete('product_id');
+          u.searchParams.delete('product_name');
+          u.searchParams.delete('price');
+          u.searchParams.delete('quantity');
+          u.searchParams.delete('flavor');
+          u.searchParams.delete('image');
+          window.history.replaceState({}, '', u.toString());
         }
-      };
+      } else {
+        const productId = params.get('product_id');
+        const flavor = params.get('flavor') || '';
 
-      tryOpen();
+        const findSelectedIds = () => {
+          const ids = [];
+          Object.values(cartData).forEach(item => {
+            if (String(item.product_id) === String(productId) && ((item.flavor || '') === flavor)) {
+              ids.push(item.id);
+            }
+          });
+          return ids;
+        };
+
+        // retry a few times in case cart data hasn't been refreshed yet
+        let attempts = 6;
+        const tryOpen = () => {
+          const selectedIds = findSelectedIds();
+          if (selectedIds.length > 0) {
+            openCheckoutOverlay({ selectedIds });
+            // remove query params to avoid reopening on navigation
+            if (window.history && window.history.replaceState) {
+              const u = new URL(window.location.href);
+              u.searchParams.delete('checkout');
+              u.searchParams.delete('product_id');
+              u.searchParams.delete('flavor');
+              window.history.replaceState({}, '', u.toString());
+            }
+          } else if (attempts-- > 0) {
+            setTimeout(tryOpen, 250);
+          } else {
+            // fallback: open overlay with all items
+            openCheckoutOverlay();
+          }
+        };
+
+        tryOpen();
+      }
     }
   } catch (e) { console.warn('Auto-checkout init failed', e); }
 })();

@@ -79,7 +79,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; heig
     
     <div id="recent-orders-list">
         @forelse($orders->where('status', '!=', 'completed') as $order)
-            <div class="order-item">
+            <div class="order-item" data-order-number="{{ $order->order_number }}" data-order-id="{{ $order->id }}">
                 <div class="order-detail">
                     <strong>Order ID:</strong> {{ $order->order_number }}
                 </div>
@@ -262,6 +262,45 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; heig
                 setTimeout(() => startQrScanner(), 300);
             }
         });
+    }
+
+    // Order ID search functionality — filter Recent Orders list, do not open modal
+    const orderSearchInput = document.getElementById('order-id-verification');
+    const orderSearchBtn = document.querySelector('.search-btn');
+    function searchOrderByNumber() {
+        if (!orderSearchInput) return;
+        const q = orderSearchInput.value.trim().toLowerCase();
+        const items = Array.from(document.querySelectorAll('.order-item'));
+        if (!q) {
+            // show all
+            items.forEach(it => it.style.display = 'block');
+            return;
+        }
+
+        let any = false;
+        items.forEach(it => {
+            const num = (it.dataset.orderNumber || '').toLowerCase();
+            if (num.includes(q)) {
+                it.style.display = 'block';
+                any = true;
+            } else {
+                it.style.display = 'none';
+            }
+        });
+
+        if (!any) {
+            showPopup('Order not found: ' + orderSearchInput.value.trim());
+        } else {
+            // scroll first match into view for convenience
+            const first = document.querySelector('.order-item:not([style*="display: none"])');
+            if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    if (orderSearchBtn) orderSearchBtn.addEventListener('click', function(e){ e.preventDefault(); searchOrderByNumber(); });
+    if (orderSearchInput) {
+        orderSearchInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); searchOrderByNumber(); } });
+        orderSearchInput.addEventListener('input', function() { if (!this.value.trim()) searchOrderByNumber(); });
     }
 
     function startQrScanner() {

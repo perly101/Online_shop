@@ -63,6 +63,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{id}/delete', [OrderController::class, 'delete'])->name('orders.delete');
+    Route::post('/orders/{id}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
     Route::get('/order-confirm/{id}', [OrderController::class, 'confirm'])->name('order.confirm');
     
     // Profile Routes

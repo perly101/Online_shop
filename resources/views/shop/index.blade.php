@@ -9,18 +9,19 @@
     html,body{height:100%;margin:0;font-family:Georgia, 'Times New Roman', serif;color:#111;overflow:hidden}
     body{background:#fff;background-image:url('{{ asset("images/Backgound.png") }}');background-size:cover;background-position:center;background-repeat:no-repeat;background-attachment:fixed}
     
-    .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 26px;padding-right:30px;background:linear-gradient(90deg,var(--gold1),var(--gold2));box-shadow:0 2px 6px rgba(0,0,0,0.08);position:fixed;top:0;left:0;right:0;width:100%;z-index:1000;box-sizing:border-box}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;padding-right:24px;background:linear-gradient(90deg,var(--gold1),var(--gold2));box-shadow:0 2px 6px rgba(0,0,0,0.08);position:fixed;top:0;left:0;right:0;width:100%;z-index:1000;box-sizing:border-box}
     .brand{font-size:20px;font-weight:700}
     .icons{display:flex;gap:12px;align-items:center}
     .icon-btn{width:40px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.15);color:#000;cursor:pointer;border:none;padding:0;transition:background 0.2s}
     .icon-btn:hover{background:rgba(0,0,0,0.25)}
     .icon-btn i{font-size:18px}
     
-    .hero{position:fixed;top:72px;left:0;right:0;bottom:0;padding:0;background:none;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
+    .hero{position:fixed;top:56px;left:0;right:0;bottom:0;padding:0;background:none;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
     .hero::-webkit-scrollbar{display:none}
     .hero{-ms-overflow-style:none;scrollbar-width:none}
     
-    .search-wrap{position:sticky;top:0;z-index:3;width:100%;max-width:820px;margin:0 auto;padding:20px 28px;box-sizing:border-box}
+    .search-wrap{position:sticky;top:0;z-index:3;width:100%;max-width:820px;margin:0 auto;padding:20px 28px;box-sizing:border-box;transition:transform 240ms ease, opacity 240ms ease}
+    .search-wrap.hidden{transform:translateY(-110%);opacity:0;pointer-events:none}
     .search{display:flex;align-items:center;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.12);padding:12px 16px}
     .search input{flex:1;border:0;outline:none;font-size:18px;padding:8px}
     .search button{background:transparent;border:0;font-size:20px;padding:6px;cursor:pointer}
@@ -286,32 +287,29 @@
         input.value = val;
     }
     
-    // Buy now from modal — add item via AJAX then go to cart and open checkout
+    // Buy now from modal — open checkout on cart page for direct purchase (no cart change until confirmed)
     function buyNowModal() {
         const form = document.getElementById('modal-cart-form');
-        const formData = new FormData(form);
-        // Send AJAX POST to add to cart
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        }).then(response => {
-            // Redirect to cart and request checkout overlay for this product
-            const pid = formData.get('product_id');
-            const flavor = formData.get('flavor') || '';
-            const param = `?checkout=1&product_id=${encodeURIComponent(pid)}&flavor=${encodeURIComponent(flavor)}`;
-            window.location.href = '{{ route('cart.index') }}' + param;
-        }).catch(err => {
-            console.error('Buy now failed', err);
-            // fallback: submit normally and redirect to cart
-            form.submit();
-            setTimeout(() => {
-                window.location.href = '{{ route('cart.index') }}?checkout=1';
-            }, 200);
-        });
+        const fd = new FormData(form);
+        const pid = fd.get('product_id');
+        const name = fd.get('product_name');
+        const price = fd.get('price');
+        const qty = fd.get('quantity');
+        const flavor = fd.get('flavor') || '';
+        const image = fd.get('image') || '';
+
+        const params = new URLSearchParams();
+        params.set('checkout', '1');
+        params.set('direct', '1');
+        params.set('product_id', pid);
+        params.set('product_name', name);
+        params.set('price', price);
+        params.set('quantity', qty);
+        if (flavor) params.set('flavor', flavor);
+        if (image) params.set('image', image);
+
+        // Redirect to cart page; cart is not modified yet
+        window.location.href = '{{ route('cart.index') }}' + '?' + params.toString();
     }
     
     // Toggle similar products
@@ -368,6 +366,24 @@
                 img.src = resolved;
             }catch(e){ console.warn('resolve grid image failed', e); }
         });
+
+        // Hide the sticky search bar when user scrolls down the product list to avoid covering content
+        try{
+            const hero = document.querySelector('.hero');
+            const searchWrap = document.querySelector('.search-wrap');
+            if (hero && searchWrap) {
+                let lastTop = 0;
+                hero.addEventListener('scroll', function(){
+                    const st = hero.scrollTop || 0;
+                    if (st > 40) {
+                        searchWrap.classList.add('hidden');
+                    } else {
+                        searchWrap.classList.remove('hidden');
+                    }
+                    lastTop = st;
+                }, { passive: true });
+            }
+        }catch(e){ console.warn('search hide init failed', e); }
     });
 </script>
 @endpush

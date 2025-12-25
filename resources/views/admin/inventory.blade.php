@@ -10,6 +10,17 @@ html, body { -ms-overflow-style: none; scrollbar-width: none; }
 html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .container, .customer-list-panel, .user-detail-panel, .order-history-list, .analytics-content { -ms-overflow-style: none; scrollbar-width: none; }
 .container::-webkit-scrollbar, .customer-list-panel::-webkit-scrollbar, .user-detail-panel::-webkit-scrollbar, .order-history-list::-webkit-scrollbar, .analytics-content::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+/* Image preview styling (compact) */
+.image-preview { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; color: #888; border: 1px dashed #e0e0e0; padding: 4px; background: #fafafa; box-sizing: border-box; overflow: hidden; }
+.image-preview img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.image-preview i { font-size: 20px; margin: 0; }
+.image-preview p { display: none; }
+
+/* Image label layout so previews appear inside the clickable label */
+.image-upload-label { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+.image-upload-container { display: inline-block; }
+
 </style>
 @endpush
 
@@ -78,9 +89,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; heig
                         <label for="product-image" class="image-upload-label">
                             <i class="fas fa-image"></i>
                             <span>Image</span>
+                            <div id="image-preview" class="image-preview"><i class="fas fa-image"></i><p style="margin:0;">No image selected</p></div>
                         </label>
                         <input type="file" id="product-image" name="image" accept="image/*" style="display: none;">
-                        <div id="image-preview" class="image-preview"></div>
                     </div>
                     <textarea id="product-description" name="description" class="form-input" placeholder="Product Description" rows="3"></textarea>
                 </div>
@@ -96,9 +107,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; heig
                                 <label class="image-upload-label">
                                     <i class="fas fa-image"></i>
                                     <span>Flavor Image</span>
+                                    <div class="flavor-image-preview image-preview"></div>
                                 </label>
                                 <input type="file" class="flavor-image" name="variants[0][image]" accept="image/*" style="display: none;">
-                                <div class="flavor-image-preview image-preview"></div>
                             </div>
                             <button type="button" class="btn-remove-flavor" style="display: none;">Remove</button>
                         </div>
@@ -130,9 +141,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; heig
                         <label for="edit-product-image" class="image-upload-label">
                             <i class="fas fa-image"></i>
                             <span>Image</span>
+                            <div id="edit-image-preview" class="image-preview"><i class="fas fa-image"></i><p style="margin:0;">No image selected</p></div>
                         </label>
                         <input type="file" id="edit-product-image" name="image" accept="image/*" style="display: none;">
-                        <div id="edit-image-preview" class="image-preview"></div>
                     </div>
                     <textarea id="edit-product-description" name="description" class="form-input" placeholder="Product Description" rows="3"></textarea>
                 </div>
@@ -148,9 +159,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; heig
                                 <label class="image-upload-label">
                                     <i class="fas fa-image"></i>
                                     <span>Flavor Image</span>
+                                    <div class="flavor-image-preview image-preview"></div>
                                 </label>
                                 <input type="file" class="flavor-image" accept="image/*" style="display: none;">
-                                <div class="flavor-image-preview image-preview"></div>
                             </div>
                             <button type="button" class="btn-remove-flavor" style="display: none;">Remove</button>
                         </div>
@@ -246,6 +257,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const editImagePreview = document.getElementById('edit-image-preview');
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
 
+    // Ensure previews show a placeholder initially
+    if (imagePreview && imagePreview.innerHTML.trim() === '') {
+        imagePreview.innerHTML = '<i class="fas fa-image"></i><p style="margin:0;">No image selected</p>';
+    }
+    if (editImagePreview && editImagePreview.innerHTML.trim() === '') {
+        editImagePreview.innerHTML = '<i class="fas fa-image"></i><p style="margin:0;">No image selected</p>';
+    }
+
+    // Label click fallback (for browsers where label[for] might be unreliable)
+    const productImageLabel = document.querySelector('label[for="product-image"]');
+    if (productImageLabel && productImageInput) {
+        productImageLabel.addEventListener('click', function(e){ e.preventDefault(); productImageInput.click(); });
+    }
+    const editImageLabel = document.querySelector('label[for="edit-product-image"]');
+    if (editImageLabel && editProductImageInput) {
+        editImageLabel.addEventListener('click', function(e){ e.preventDefault(); editProductImageInput.click(); });
+    }
+
     // Create a flavor entry element
     function createFlavorEntry(index, data = {}) {
         const entry = document.createElement('div');
@@ -261,9 +290,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <label class="image-upload-label">
                     <i class="fas fa-image"></i>
                     <span>Flavor Image</span>
+                    <div class="flavor-image-preview image-preview">${data.image ? `<img src="/images/${data.image}" alt="Flavor">` : ''}</div>
                 </label>
                 <input type="file" class="flavor-image" name="variants[${index}][image]" accept="image/*" style="display: none;">
-                <div class="flavor-image-preview image-preview">${data.image ? `<img src="/images/${data.image}" alt="Flavor">` : ''}</div>
             </div>
             <button type="button" class="btn-remove-flavor">
                 Remove
@@ -492,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Search functionality
-    const searchInput = document.getElementById('search-product');
+    const searchInput = document.getElementById('product-search');
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
@@ -535,116 +564,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    function editProduct(id) {
-        // Fetch product data and populate the edit form
-        fetch(`/admin/inventory/products/${id}`)
-            .then(res => res.json())
-            .then(product => {
-                // Show edit section
-                document.getElementById('edit-product-section').style.display = 'block';
-                document.getElementById('edit-product-id').value = product.id;
-                document.getElementById('edit-product-name').value = product.name;
-                document.getElementById('edit-product-price').value = product.price;
-                document.getElementById('edit-product-stock').value = product.stock;
-                document.getElementById('edit-product-description').value = product.description || '';
-                // Show current image
-                const editImagePreview = document.getElementById('edit-image-preview');
-                if (product.image) {
-                    editImagePreview.innerHTML = `<img src="/images/${product.image}" alt="${product.name}">`;
-                } else {
-                    editImagePreview.innerHTML = '<i class="fas fa-image"></i><p>No image</p>';
-                }
-                // Clear and populate variants/flavors
-                const editFlavorsContainer = document.getElementById('edit-flavors-container');
-                editFlavorsContainer.innerHTML = '';
-                let editFlavorCounter = 0;
-                if (product.variants && product.variants.length > 0) {
-                    product.variants.forEach(variant => {
-                        const entry = document.createElement('div');
-                        entry.className = 'flavor-entry';
-                        entry.innerHTML = `
-                            <input type="text" name="variants[${editFlavorCounter}][name]" class="flavor-name form-input" placeholder="Flavor Name" value="${variant.flavor || ''}">
-                            <input type="number" name="variants[${editFlavorCounter}][price]" class="flavor-price form-input" placeholder="Flavor Price" step="0.01" min="0" value="${variant.price || ''}">
-                            <input type="number" name="variants[${editFlavorCounter}][stock]" class="flavor-stock form-input" placeholder="Stock" min="0" value="${variant.stock || ''}">
-                            <div class="image-upload-container">
-                                <label class="image-upload-label">
-                                    <i class="fas fa-image"></i>
-                                    <span>Flavor Image</span>
-                                </label>
-                                <input type="file" class="flavor-image" name="variants[${editFlavorCounter}][image]" accept="image/*" style="display: none;">
-                                <div class="flavor-image-preview image-preview">${variant.image ? `<img src="/images/${variant.image}" alt="Flavor">` : ''}</div>
-                            </div>
-                            <button type="button" class="btn-remove-flavor">Remove</button>
-                        `;
-                        // Add image preview functionality
-                        const imageInput = entry.querySelector('.flavor-image');
-                        const imagePreview = entry.querySelector('.flavor-image-preview');
-                        const imageLabel = entry.querySelector('.image-upload-label');
-                        imageLabel.addEventListener('click', function() { imageInput.click(); });
-                        imageInput.addEventListener('change', function(e) {
-                            const file = e.target.files[0];
-                            if (file) {
-                                const reader = new FileReader();
-                                reader.onload = function(event) {
-                                    imagePreview.innerHTML = `<img src="${event.target.result}" alt="Preview">`;
-                                };
-                                reader.readAsDataURL(file);
-                            }
-                        });
-                        // Add remove button functionality
-                        const removeBtn = entry.querySelector('.btn-remove-flavor');
-                        removeBtn.addEventListener('click', function() {
-                            entry.remove();
-                        });
-                        editFlavorsContainer.appendChild(entry);
-                        editFlavorCounter++;
-                    });
-                } else {
-                    // Add at least one empty entry if no variants
-                    const entry = document.createElement('div');
-                    entry.className = 'flavor-entry';
-                    entry.innerHTML = `
-                        <input type="text" name="variants[0][name]" class="flavor-name form-input" placeholder="Flavor Name">
-                        <input type="number" name="variants[0][price]" class="flavor-price form-input" placeholder="Flavor Price" step="0.01" min="0">
-                        <input type="number" name="variants[0][stock]" class="flavor-stock form-input" placeholder="Stock" min="0">
-                        <div class="image-upload-container">
-                            <label class="image-upload-label">
-                                <i class="fas fa-image"></i>
-                                <span>Flavor Image</span>
-                            </label>
-                            <input type="file" class="flavor-image" name="variants[0][image]" accept="image/*" style="display: none;">
-                            <div class="flavor-image-preview image-preview"></div>
-                        </div>
-                        <button type="button" class="btn-remove-flavor">Remove</button>
-                    `;
-                    // Add image preview functionality
-                    const imageInput = entry.querySelector('.flavor-image');
-                    const imagePreview = entry.querySelector('.flavor-image-preview');
-                    const imageLabel = entry.querySelector('.image-upload-label');
-                    imageLabel.addEventListener('click', function() { imageInput.click(); });
-                    imageInput.addEventListener('change', function(e) {
-                        const file = e.target.files[0];
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onload = function(event) {
-                                imagePreview.innerHTML = `<img src="${event.target.result}" alt="Preview">`;
-                            };
-                            reader.readAsDataURL(file);
-                        }
-                    });
-                    // Add remove button functionality
-                    const removeBtn = entry.querySelector('.btn-remove-flavor');
-                    removeBtn.addEventListener('click', function() {
-                        entry.remove();
-                    });
-                    editFlavorsContainer.appendChild(entry);
-                }
-            })
-            .catch(() => alert('Failed to load product data.'));
-    }
-    
-    function closeEditModal() {
-        document.getElementById('edit-modal').style.display = 'none';
-    }
+    // Duplicate editProduct / closeEditModal removed — single implementation lives in the DOMContentLoaded block above to ensure image preview behavior works correctly.
 </script>
 @endpush

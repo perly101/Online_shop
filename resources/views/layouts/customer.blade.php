@@ -13,8 +13,8 @@
         html,body{height:100%;margin:0;padding:0;font-family:Georgia, 'Times New Roman', serif;color:#111;overflow-x:hidden}
         body{background-image:url('{{ asset("images/Backgound.png") }}');background-size:cover;background-position:center;background-repeat:no-repeat;background-attachment:fixed}
         
-        /* Fixed Topbar */
-        .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 26px;background:linear-gradient(90deg,var(--gold1),var(--gold2));box-shadow:0 2px 6px rgba(0,0,0,0.08);position:fixed;top:0;left:0;right:0;width:100%;z-index:1000;box-sizing:border-box}
+        /* Fixed Topbar - reduced height */
+        .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:linear-gradient(90deg,var(--gold1),var(--gold2));box-shadow:0 2px 6px rgba(0,0,0,0.08);position:fixed;top:0;left:0;right:0;width:100%;z-index:1000;box-sizing:border-box}
         .brand-section{display:flex;align-items:center;gap:12px}
         .brand{font-size:20px;font-weight:700;text-decoration:none;color:#000}
         .icons{display:flex;gap:12px;align-items:center}
@@ -25,8 +25,8 @@
         #backBtn:hover{background:transparent}
         
         /* Main Content Area */
-        .main-content{margin-top:72px;min-height:calc(100vh - 72px - 60px);position:relative;padding-bottom:20px}
-        .page-overlay{position:fixed;inset:0;top:72px;background:linear-gradient(rgba(255,244,200,0.65), rgba(255,244,200,0.65));pointer-events:none;z-index:0}
+        .main-content{margin-top:56px;min-height:calc(100vh - 56px - 60px);position:relative;padding-bottom:20px}
+        .page-overlay{position:fixed;inset:0;top:56px;background:linear-gradient(rgba(255,244,200,0.65), rgba(255,244,200,0.65));pointer-events:none;z-index:0}
         
         /* Footer */
         .footer{background:linear-gradient(90deg,var(--gold1),var(--gold2));padding:4px 26px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -2px 6px rgba(0,0,0,0.08);position:fixed;bottom:0;left:0;right:0;z-index:10}

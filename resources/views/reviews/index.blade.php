@@ -5,7 +5,7 @@
 @push('styles')
 <style>
 :root{--gold1:#ffd54a;--gold2:#f0ad06}
-.page-header{background:linear-gradient(135deg,var(--gold1),var(--gold2));padding:30px 20px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin-top:72px}
+.page-header{background:linear-gradient(135deg,var(--gold1),var(--gold2));padding:30px 20px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin-top:56px}
 .store-icon{width:60px;height:60px;margin:0 auto 15px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center}
 .store-icon i{font-size:30px;color:#111}
 .page-title{font-size:28px;font-weight:700;margin:0;color:#111}

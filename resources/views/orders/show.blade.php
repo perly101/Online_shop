@@ -275,8 +275,27 @@ function cancelOrder() {
 // Reorder
 function reorder() {
   showConfirmPopup('Add all items from this order to your cart?', async () => {
-    // Implement reorder functionality
-    showPopup('Reorder feature coming soon!');
+    try {
+      const response = await fetch('{{ route('orders.reorder', $order->id) }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        showPopup(data.message || 'Items added to cart');
+        setTimeout(() => {
+          window.location.href = '{{ route('cart.index') }}';
+        }, 900);
+      } else {
+        showPopup(data.message || 'Failed to add items to cart');
+      }
+    } catch (err) {
+      console.error('Reorder failed', err);
+      showPopup('Failed to add items to cart, please try again');
+    }
   });
 }
 
