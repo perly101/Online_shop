@@ -1,0 +1,1415 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if user is logged in as staff
+    const loggedInStaff = localStorage.getItem('loggedInStaff');
+    if (!loggedInStaff) {
+        // Redirect to login page if not logged in
+        window.location.href = '../admin-login.html';
+        return;
+    }
+    // ============================================
+    // DUMMY DATA FOR ORDERS
+    // ============================================
+    // Load orders from localStorage if available, otherwise use default data
+    let ordersData = [];
+    const storedOrders = localStorage.getItem('ordersData');
+    console.log('Loading orders from localStorage:', storedOrders);
+    if (storedOrders) {
+        try {
+            ordersData = JSON.parse(storedOrders);
+            console.log('Loaded orders data:', ordersData);
+            
+            // Fix any orders that might have NaN values or missing data
+            ordersData = ordersData.map(order => {
+                // Fix items with NaN prices
+                if (order.items) {
+                    order.items = order.items.map(item => {
+                        // Ensure price is a valid number
+                        if (isNaN(item.price) || item.price === null || item.price === undefined) {
+                            item.price = 0;
+                        }
+                        
+                        // Ensure quantity is a valid number
+                        // Handle both 'quantity' and 'qty' fields for compatibility
+                        if (isNaN(item.quantity) || item.quantity === null || item.quantity === undefined) {
+                            if (!isNaN(item.qty) && item.qty !== null && item.qty !== undefined) {
+                                item.quantity = item.qty;
+                            } else {
+                                item.quantity = 1;
+                            }
+                        }
+                        
+                        // Ensure image has a fallback
+                        if (!item.image) {
+                            item.image = 'image/placeholder.png';
+                        }
+                        
+                        return item;
+                    });
+                }
+                
+                // Recalculate total based on fixed item prices
+                if (order.items) {
+                    order.total = order.items.reduce((sum, item) => {
+                        // Handle both 'quantity' and 'qty' fields for compatibility
+                        const quantity = item.quantity || item.qty || 1;
+                        return sum + (parseFloat(item.price) || 0) * (parseInt(quantity) || 1);
+                    }, 0);
+                }
+                
+                return order;
+            });
+        } catch (e) {
+            console.error('Error parsing stored orders data:', e);
+            // Fallback to default data if parsing fails
+            ordersData = [
+                {
+                    id: "AET-2025-001",
+                    customerEmail: "altheacatubig@gmail.com",
+                    total: 150,
+                    date: "10/8/2025",
+                    time: "8:15:05 AM",
+                    status: "Processing",
+                    items: [
+                        { name: "Nescafe Original Twin pack", quantity: 1, price: 150, image: null }
+                    ]
+                },
+                {
+                    id: "AET-2025-002",
+                    customerEmail: "sally45@gmail.com",
+                    total: 1060,
+                    date: "10/8/2025",
+                    time: "8:55:00 AM",
+                    status: "Pending",
+                    items: [
+                        { name: "Nescafe Original Twin pack", quantity: 2, price: 150, image: null },
+                        { name: "Coke mismo 290ml", quantity: 1, price: 310, image: null }
+                    ]
+                },
+                {
+                    id: "AET-2025-003",
+                    customerEmail: "marites D.",
+                    total: 290,
+                    date: "10/8/2025",
+                    time: "10:15:11 AM",
+                    status: "Pending",
+                    items: [
+                        { name: "Bear brand 320g", quantity: 1, price: 290, image: null }
+                    ]
+                },
+                {
+                    id: "AET-2025-004",
+                    customerEmail: "Juan Gorve",
+                    total: 123,
+                    date: "10/8/2025",
+                    time: "11:11:19 AM",
+                    status: "Pending",
+                    items: [
+                        { name: "Mega Sardines", quantity: 1, price: 123, image: null }
+                    ]
+                },
+                {
+                    id: "AET-2025-005",
+                    customerEmail: "ally34@gmail.com",
+                    total: 233,
+                    date: "10/8/2025",
+                    time: "3:30:10 PM",
+                    status: "Pending",
+                    items: [
+                        { name: "Surf 65g", quantity: 1, price: 233, image: null }
+                    ]
+                },
+                {
+                    id: "AET-2025-006",
+                    customerEmail: "davied2@gmail.com",
+                    total: 300,
+                    date: "10/8/2025",
+                    time: "4:25:15 AM",
+                    status: "Pending",
+                    items: [
+                        { name: "Nescafe Original Twin pack", quantity: 1, price: 150, image: 'image/nescafe.png' },
+                        { name: "Piatos 5 Flavors", quantity: 5, price: 30, image: 'image/piatos.png' }
+                    ]
+                }
+            ];
+        }
+    } else {
+        // Default data if no stored data
+        ordersData = [
+            {
+                id: "AET-2025-001",
+                customerEmail: "altheacatubig@gmail.com",
+                total: 150,
+                date: "10/8/2025",
+                time: "8:15:05 AM",
+                status: "Processing",
+                items: [
+                    { name: "Nescafe Original Twin pack", quantity: 1, price: 150, image: null }
+                ]
+            },
+            {
+                id: "AET-2025-002",
+                customerEmail: "sally45@gmail.com",
+                total: 1060,
+                date: "10/8/2025",
+                time: "8:55:00 AM",
+                status: "Pending",
+                items: [
+                    { name: "Nescafe Original Twin pack", quantity: 2, price: 150, image: null },
+                    { name: "Coke mismo 290ml", quantity: 1, price: 310, image: null }
+                ]
+            },
+            {
+                id: "AET-2025-003",
+                customerEmail: "marites D.",
+                total: 290,
+                date: "10/8/2025",
+                time: "10:15:11 AM",
+                status: "Pending",
+                items: [
+                    { name: "Bear brand 320g", quantity: 1, price: 290, image: null }
+                ]
+            },
+            {
+                id: "AET-2025-004",
+                customerEmail: "Juan Gorve",
+                total: 123,
+                date: "10/8/2025",
+                time: "11:11:19 AM",
+                status: "Pending",
+                items: [
+                    { name: "Mega Sardines", quantity: 1, price: 123, image: null }
+                ]
+            },
+            {
+                id: "AET-2025-005",
+                customerEmail: "ally34@gmail.com",
+                total: 233,
+                date: "10/8/2025",
+                time: "3:30:10 PM",
+                status: "Pending",
+                items: [
+                    { name: "Surf 65g", quantity: 1, price: 233, image: null }
+                ]
+            },
+            {
+                id: "AET-2025-006",
+                customerEmail: "davied2@gmail.com",
+                total: 300,
+                date: "10/8/2025",
+                time: "4:25:15 AM",
+                status: "Pending",
+                items: [
+                    { name: "Nescafe Original Twin pack", quantity: 1, price: 150, image: 'image/nescafe.png' },
+                    { name: "Piatos 5 Flavors", quantity: 5, price: 30, image: 'image/piatos.png' }
+                ]
+            }
+        ];
+    }
+
+    // ============================================
+    // DOM ELEMENTS
+    // ============================================
+    const ordersList = document.getElementById('recent-orders-list');
+    const modal = document.getElementById('order-modal');
+    const closeBtn = document.querySelector('.close-btn');
+    const orderIdInput = document.getElementById('order-id'); // Changed from 'order-search'
+    const searchIcon = document.getElementById('search-icon');
+    const searchBtn = document.querySelector('.search-btn');
+    const verificationOrderIdInput = document.getElementById('order-id-verification');
+    const scanBtn = document.querySelector('.scan-btn');
+    
+    // Check if required elements exist
+    if (!ordersList || !modal || !closeBtn) {
+        console.error('Required DOM elements not found. Make sure the HTML structure is correct.');
+        return;
+    }
+
+    // ============================================
+    // FUNCTIONS
+    // ============================================
+
+    /**
+     * Formats date from "10/8/2025" to "10/08/25"
+     */
+    function formatDate(dateString) {
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+            const month = parts[0].padStart(2, '0');
+            const day = parts[1].padStart(2, '0');
+            const year = parts[2].slice(-2);
+            return `${month}/${day}/${year}`;
+        }
+        return dateString;
+    }
+
+    /**
+     * Formats time to lowercase am/pm
+     */
+    function formatTime(timeString) {
+        return timeString.toLowerCase();
+    }
+
+    /**
+     * Renders the list of recent orders based on the data array.
+     */
+    function renderOrders() {
+        console.log('Rendering orders, orders count:', ordersData.length);
+        console.log('Orders data:', ordersData);
+        ordersList.innerHTML = ''; // Clear existing list
+
+        // Filter out completed orders (those with status "Complete")
+        const recentOrders = ordersData.filter(order => order.status !== 'Complete');
+
+        recentOrders.forEach((order, index) => {
+            const orderItem = document.createElement('div');
+            orderItem.className = 'order-item';
+            
+            // Generate list item HTML
+            orderItem.innerHTML = `
+                <div class="order-detail">
+                    <strong>Order ID:</strong> ${order.id}
+                </div>
+                <div class="order-detail">
+                    <strong>Customer:</strong> ${order.customerEmail}
+                </div>
+                <div class="order-detail">
+                    <strong>Total:</strong> ₱ ${(typeof order.total === 'number' && !isNaN(order.total) ? order.total : 0).toLocaleString()}
+                </div>
+                <div class="order-detail">
+                    <strong>Placed At:</strong> ${order.date}, ${order.time}
+                </div>
+                <div class="order-actions">
+                    <a href="#" class="view-orders-btn" data-order-id="${order.id}">View Orders</a>
+                    <div class="update-status">
+                        <span>Update Status:</span>
+                        <select class="status-dropdown" data-order-id="${order.id}">
+                            <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Ready for Pickup" ${order.status === 'Ready for Pickup' ? 'selected' : ''}>Ready for Pickup</option>
+                            <option value="Complete" ${order.status === 'Complete' ? 'selected' : ''}>Complete</option>
+                            <option value="Cancel" ${order.status === 'Cancel' ? 'selected' : ''}>Cancel</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            ordersList.appendChild(orderItem);
+        });
+
+        // Attach event listeners for the "View Orders" buttons
+        document.querySelectorAll('.view-orders-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const orderId = e.currentTarget.getAttribute('data-order-id');
+                if (orderId) {
+                    const order = ordersData.find(o => o.id === orderId);
+                    if (order) {
+                        showOrderDetails(order);
+                    } else {
+                        console.error('Order not found:', orderId);
+                    }
+                } else {
+                    console.error('Invalid order ID');
+                }
+            });
+        });
+
+        // Attach event listeners for status dropdowns
+        document.querySelectorAll('.status-dropdown').forEach(dropdown => {
+            dropdown.addEventListener('change', (e) => {
+                const orderId = e.target.getAttribute('data-order-id');
+                if (orderId) {
+                    const order = ordersData.find(o => o.id === orderId);
+                    if (order) {
+                        const orderIndex = ordersData.findIndex(o => o.id === orderId);
+                        const newStatus = e.target.value;
+                        const oldStatus = order.status;
+                        
+                        // Show confirmation modal for all status changes
+                        showStatusChangeConfirmation(order, orderIndex, newStatus);
+                    } else {
+                        console.error('Order not found:', orderId);
+                    }
+                } else {
+                    console.error('Invalid order ID');
+                }
+            });
+        });
+    }
+
+    /**
+     * Filters orders based on search term and reorders the list to show matches first
+     * Exact matches are prioritized at the top
+     */
+    function filterOrders(searchTerm) {
+        if (!searchTerm) {
+            // If no search term, show all orders in original order
+            renderOrders();
+            return;
+        }
+        
+        // Normalize the search term
+        const normalizedSearch = searchTerm.trim().toUpperCase();
+        
+        // Create a copy of ordersData to avoid modifying the original
+        const ordersCopy = [...ordersData];
+        
+        // Sort orders to prioritize matches
+        ordersCopy.sort((a, b) => {
+            const idA = a.id.toUpperCase();
+            const idB = b.id.toUpperCase();
+            
+            // Check for exact matches
+            const isExactMatchA = idA === normalizedSearch;
+            const isExactMatchB = idB === normalizedSearch;
+            
+            // If one is exact match and other isn't, prioritize exact match
+            if (isExactMatchA && !isExactMatchB) return -1;
+            if (!isExactMatchA && isExactMatchB) return 1;
+            
+            // Check for partial matches
+            const isPartialMatchA = idA.includes(normalizedSearch);
+            const isPartialMatchB = idB.includes(normalizedSearch);
+            
+            // If one is partial match and other isn't, prioritize partial match
+            if (isPartialMatchA && !isPartialMatchB) return -1;
+            if (!isPartialMatchA && isPartialMatchB) return 1;
+            
+            // If both are matches or both are not matches, maintain original order
+            return 0;
+        });
+        
+        // Filter to only show matching orders
+        const filteredOrders = ordersCopy.filter(order => {
+            const orderIdStr = order.id.toString().toUpperCase();
+            return orderIdStr.includes(normalizedSearch);
+        });
+        
+        renderFilteredOrders(filteredOrders);
+    }
+    
+    /**
+     * Renders filtered orders
+     */
+    function renderFilteredOrders(filteredOrders) {
+        ordersList.innerHTML = '';
+        
+        // Filter out completed orders (those with status "Complete")
+        const recentFilteredOrders = filteredOrders.filter(order => order.status !== 'Complete');
+        
+        if (recentFilteredOrders.length === 0) {
+            const noResults = document.createElement('div');
+            noResults.className = 'no-results';
+            noResults.textContent = 'No orders found matching your search.';
+            noResults.style.textAlign = 'center';
+            noResults.style.padding = '20px';
+            noResults.style.color = '#666';
+            ordersList.appendChild(noResults);
+            return;
+        }
+        
+        recentFilteredOrders.forEach((order, index) => {
+            const orderItem = document.createElement('div');
+            orderItem.className = 'order-item';
+            
+            // Generate list item HTML
+            orderItem.innerHTML = `
+                <div class="order-detail">
+                    <strong>Order ID:</strong> ${order.id}
+                </div>
+                <div class="order-detail">
+                    <strong>Customer:</strong> ${order.customerEmail}
+                </div>
+                <div class="order-detail">
+                    <strong>Total:</strong> ₱ ${(typeof order.total === 'number' && !isNaN(order.total) ? order.total : 0).toLocaleString()}
+                </div>
+                <div class="order-detail">
+                    <strong>Placed At:</strong> ${order.date}, ${order.time}
+                </div>
+                <div class="order-actions">
+                    <a href="#" class="view-orders-btn" data-order-id="${order.id}">View Orders</a>
+                    <div class="update-status">
+                        <span>Update Status:</span>
+                        <select class="status-dropdown" data-order-id="${order.id}">
+                            <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Ready for Pickup" ${order.status === 'Ready for Pickup' ? 'selected' : ''}>Ready for Pickup</option>
+                            <option value="Complete" ${order.status === 'Complete' ? 'selected' : ''}>Complete</option>
+                            <option value="Cancel" ${order.status === 'Cancel' ? 'selected' : ''}>Cancel</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            ordersList.appendChild(orderItem);
+        });
+        
+        // Attach event listeners for the "View Orders" buttons
+        document.querySelectorAll('.view-orders-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const orderId = e.currentTarget.getAttribute('data-order-id');
+                if (orderId) {
+                    const order = ordersData.find(o => o.id === orderId);
+                    if (order) {
+                        showOrderDetails(order);
+                    } else {
+                        console.error('Order not found:', orderId);
+                    }
+                } else {
+                    console.error('Invalid order ID');
+                }
+            });
+        });
+
+        // Attach event listeners for status dropdowns
+        document.querySelectorAll('.status-dropdown').forEach(dropdown => {
+            dropdown.addEventListener('change', (e) => {
+                const orderId = e.target.getAttribute('data-order-id');
+                if (orderId) {
+                    const order = ordersData.find(o => o.id === orderId);
+                    if (order) {
+                        const orderIndex = ordersData.findIndex(o => o.id === orderId);
+                        const newStatus = e.target.value;
+                        const oldStatus = order.status;
+                        
+                        // Show confirmation modal for all status changes
+                        showStatusChangeConfirmation(order, orderIndex, newStatus);
+                    } else {
+                        console.error('Order not found:', orderId);
+                    }
+                } else {
+                    console.error('Invalid order ID');
+                }
+            });
+        });
+    }
+    
+    /**
+     * Shows confirmation modal for sending notification when changing status to Ready for Pickup
+     * @param {object} order - The order data object.
+     * @param {number} index - The index of the order in the ordersData array.
+     */
+    function showNotificationConfirmation(order, index) {
+        // This function is kept for backward compatibility
+        showStatusChangeConfirmation(order, index, 'Ready for Pickup');
+    }
+    
+    /**
+     * Shows confirmation modal for status change
+     * @param {object} order - The order data object.
+     * @param {number} index - The index of the order in the ordersData array.
+     * @param {string} newStatus - The new status to be set.
+     */
+    function showStatusChangeConfirmation(order, index, newStatus) {
+        // Create modal if it doesn't exist
+        let notificationModal = document.getElementById('notification-modal');
+        if (!notificationModal) {
+            notificationModal = document.createElement('div');
+            notificationModal.id = 'notification-modal';
+            notificationModal.className = 'modal';
+            notificationModal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Send Notification to Customer</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p id="status-message"></p>
+                        <div class="form-actions">
+                            <button class="btn-cancel-edit" id="cancel-notification-send">Cancel</button>
+                            <button class="btn-add-product" id="send-notification-to-customer">Send</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(notificationModal);
+        }
+        
+        // Set the appropriate message based on the new status
+        const messageElement = notificationModal.querySelector('#status-message');
+        switch(newStatus) {
+            case 'Ready for Pickup':
+                messageElement.textContent = `Your order #${order.id} is ready for pick-up`;
+                break;
+            case 'Cancel':
+                messageElement.textContent = `Your order #${order.id} is cancelled`;
+                break;
+            case 'Processing':
+                messageElement.textContent = `Your order #${order.id} is now on processing`;
+                break;
+            case 'Pending':
+                messageElement.textContent = `Your order #${order.id} is in pending`;
+                break;
+            case 'Complete':
+                messageElement.textContent = `Your order #${order.id} is successfully received!`;
+                break;
+            default:
+                messageElement.textContent = `Your order #${order.id} status changed to ${newStatus}`;
+        }
+        
+        // Remove existing event listeners to avoid duplicates
+        const cancelBtn = document.getElementById('cancel-notification-send');
+        const sendBtn = document.getElementById('send-notification-to-customer');
+        
+        // Create new event listeners
+        const cancelHandler = () => {
+            notificationModal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore scrolling
+            // Reset the dropdown to the previous value
+            const dropdown = document.querySelector(`.status-dropdown[data-order-id="${order.id}"]`);
+            if (dropdown) {
+                dropdown.value = ordersData[index].status; // Reset to previous status
+            }
+            // Remove event listeners
+            cancelBtn.removeEventListener('click', cancelHandler);
+            sendBtn.removeEventListener('click', sendHandler);
+        };
+        
+        const sendHandler = () => {
+            // For status updates, just update the status
+            // If status is Complete, we keep the order in the list but mark it as Complete
+            // This way it won't appear in Recent Orders but will still count in Analytics
+            ordersData[index].status = newStatus;
+            
+            // Add completion date if status is Complete
+            if (newStatus === 'Complete') {
+                ordersData[index].completionDate = new Date().toLocaleDateString('en-US'); // Format: MM/DD/YYYY
+                // Move completed order to order history
+                moveOrderToHistory(ordersData[index]);
+            }
+            
+            // Save updated orders to localStorage
+            console.log('Saving orders to localStorage:', ordersData);
+            localStorage.setItem('ordersData', JSON.stringify(ordersData));
+            console.log('Order status updated and saved to localStorage:', ordersData[index]);
+            
+            // Update the dropdown to reflect the new status
+            const dropdown = document.querySelector(`.status-dropdown[data-order-id="${order.id}"]`);
+            if (dropdown) {
+                dropdown.value = newStatus; // Set to new status
+            }
+            
+            // Send notification (simulated)
+            sendNotificationForStatusChange(order, newStatus);
+            
+            // Close modal
+            notificationModal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore scrolling
+            
+            // Remove event listeners
+            cancelBtn.removeEventListener('click', cancelHandler);
+            sendBtn.removeEventListener('click', sendHandler);
+        };
+        
+        // Add event listeners
+        cancelBtn.addEventListener('click', cancelHandler);
+        sendBtn.addEventListener('click', sendHandler);
+        
+        // Show the modal
+        notificationModal.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+    
+    /**
+     * Sends notification to customer for status change and stores it for admin viewing
+     * @param {object} order - The order data object.
+     * @param {string} newStatus - The new status of the order.
+     */
+    function sendNotificationForStatusChange(order, newStatus) {
+        // Create notification message based on status
+        let message = '';
+        switch(newStatus) {
+            case 'Ready for Pickup':
+                message = `Your order ${order.id} is ready for pickup! Please proceed to the store.`;
+                break;
+            case 'Cancel':
+                message = `Your order ${order.id} has been cancelled.`;
+                break;
+            case 'Processing':
+                message = `Your order ${order.id} is now being processed.`;
+                break;
+            case 'Pending':
+                message = `Your order ${order.id} is now pending.`;
+                break;
+            case 'Complete':
+                message = `Your order ${order.id} has been successfully completed!`;
+                break;
+            default:
+                message = `Your order ${order.id} status has been updated to: ${newStatus}`;
+        }
+        
+        // Store notification for admin viewing
+        storeAdminNotification(order.id, message, newStatus);
+
+        // Also store notification for customer Messages overlay
+        try {
+            const raw = localStorage.getItem('notifications') || '[]';
+            let notifications = [];
+            try { notifications = JSON.parse(raw); } catch { notifications = []; }
+
+            const type = (newStatus === 'Complete' || newStatus === 'Ready for Pickup') ? 'success'
+                        : (newStatus === 'Cancel' ? 'warning' : 'info');
+            const customerNotif = {
+                id: Date.now(),
+                orderId: order.id,
+                message: message,
+                type: type,
+                read: false,
+                createdAt: new Date().toISOString()
+            };
+            notifications.unshift(customerNotif);
+            if (notifications.length > 100) notifications.splice(100);
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            
+            // Trigger notification update in customer UI
+            updateCustomerNotificationDot();
+        } catch (e) {
+            console.error('Error storing customer notification:', e);
+        }
+        
+        // In a real application, this would make an API call to send the notification to the customer
+        console.log(`Notification sent to customer ${order.customerEmail} for order status change to: ${newStatus}`);
+        console.log(`Notification message: ${message}`);
+    }
+    
+    /**
+     * Updates the notification dot in customer UI
+     */
+    function updateCustomerNotificationDot() {
+        // This function would typically send a message to the customer UI
+        // For localStorage-based implementation, we rely on the customer UI
+        // to check for notifications periodically
+        console.log('Customer notification dot update triggered');
+    }
+    
+    /**
+     * Stores notification for admin viewing
+     * @param {string} orderId - The order ID.
+     * @param {string} message - The notification message.
+     * @param {string} status - The order status.
+     */
+    function storeAdminNotification(orderId, message, status) {
+        try {
+            // Get existing admin notifications from localStorage
+            const notificationsRaw = localStorage.getItem('adminNotifications') || '[]';
+            let notifications = [];
+            
+            try {
+                notifications = JSON.parse(notificationsRaw);
+            } catch (e) {
+                console.error('Error parsing admin notifications:', e);
+                notifications = [];
+            }
+            
+            // Create new notification
+            const notification = {
+                id: Date.now(),
+                orderId: orderId,
+                message: message,
+                status: status,
+                timestamp: new Date().toISOString(),
+                read: false
+            };
+            
+            // Add to beginning of array
+            notifications.unshift(notification);
+            
+            // Keep only last 50 notifications
+            if (notifications.length > 50) {
+                notifications = notifications.slice(0, 50);
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+            
+            console.log('Admin notification stored:', notification);
+        } catch (error) {
+            console.error('Error storing admin notification:', error);
+        }
+    }
+    
+    /**
+     * Moves a completed order to the order history
+     * @param {object} order - The completed order data object.
+     */
+    function moveOrderToHistory(order) {
+        console.log('Moving order to history:', order);
+        // Load existing order history from localStorage
+        let orderHistory = [];
+        const storedHistory = localStorage.getItem('orderHistory');
+        console.log('Existing order history from localStorage:', storedHistory);
+        if (storedHistory) {
+            try {
+                orderHistory = JSON.parse(storedHistory);
+            } catch (e) {
+                console.error('Error parsing order history:', e);
+            }
+        }
+        
+        // Convert order data to match order history format
+        const historyOrder = {
+            id: order.id,
+            date: order.date,
+            time: order.time,
+            status: 'Delivered', // All completed orders are marked as Delivered in history
+            price: order.total
+        };
+        
+        // Add the order to history
+        orderHistory.push(historyOrder);
+        
+        // Save updated history to localStorage
+        localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+        console.log('Order moved to history:', historyOrder);
+        console.log('Updated order history in localStorage:', JSON.stringify(orderHistory));
+    }
+    
+    /**
+     * Simulates sending notification to customer
+     * @param {object} order - The order data object.
+     */
+    function sendNotificationToCustomer(order) {
+        // In a real application, this would make an API call to send the notification
+        // For now, we'll just log it and not show any alert
+        console.log(`Notification sent to customer for order: ${order.customerEmail}`);
+        // No alert is shown as per requirements
+    }
+    
+    /**
+     * Populates and displays the modal with specific order details.
+     * @param {object} order - The order data object.
+     */
+    function showOrderDetails(order) {
+        // Update customer email
+        document.getElementById('modal-customer-email').textContent = order.customerEmail;
+        
+        // Update date and time (formatted)
+        const formattedDate = formatDate(order.date);
+        const formattedTime = formatTime(order.time);
+        document.getElementById('modal-date').textContent = formattedDate;
+        document.getElementById('modal-time').textContent = formattedTime;
+        
+        // Clear and populate items list
+        const itemsList = document.getElementById('modal-items-list');
+        itemsList.innerHTML = '';
+
+        // Load current products from localStorage to get latest product info
+        let currentProducts = [];
+        try {
+            const storedProducts = localStorage.getItem('inventoryProducts');
+            if (storedProducts) {
+                currentProducts = JSON.parse(storedProducts);
+            }
+        } catch (e) {
+            console.error('Error loading products from localStorage:', e);
+        }
+
+        // Use the original order total to maintain consistency with checkout confirmation
+        let calculatedTotal = (typeof order.total === 'number' && !isNaN(order.total)) ? order.total : 0;
+            order.items.forEach(item => {
+            // Find matching product in inventory to get current name, image, and price
+            let productName = item.name;
+            let productImage = item.image || 'image/placeholder.png';
+            let productPrice = item.price; // Default to order price if product not found
+            
+            // Look for product by ID first (more reliable), then by name
+            let matchingProduct = null;
+            if (item.id) {
+                matchingProduct = currentProducts.find(product => product.id == item.id);
+            }
+            
+            // If no match by ID, try matching by name
+            if (!matchingProduct) {
+                matchingProduct = currentProducts.find(product => product.name === item.name);
+            }
+            
+            if (matchingProduct) {
+                productName = matchingProduct.name;
+                // Use current product image if available, otherwise fallback to item image
+                productImage = matchingProduct.image || item.image || 'image/placeholder.png';
+                productPrice = matchingProduct.price; // Use current product price
+            } else {
+                // If product not found in inventory, use item data but provide fallbacks
+                productImage = item.image || 'image/placeholder.png';
+                productPrice = item.price || 0;
+            }
+            
+            // Calculate line total: quantity × unit price
+            // Ensure both quantity and price are valid numbers before multiplication
+            // Handle both 'quantity' and 'qty' fields for compatibility
+            const itemQuantity = item.quantity || item.qty || 1;
+            const quantity = typeof itemQuantity === 'number' && !isNaN(itemQuantity) ? itemQuantity : 
+                          (typeof itemQuantity === 'string' && !isNaN(parseFloat(itemQuantity))) ? parseFloat(itemQuantity) : 1;
+            const price = typeof productPrice === 'number' && !isNaN(productPrice) ? productPrice : 
+                        (typeof productPrice === 'string' && !isNaN(parseFloat(productPrice))) ? parseFloat(productPrice) : 0;
+            const lineTotal = quantity * price;
+            calculatedTotal += lineTotal;
+            
+            // Format the line total for display
+            const formattedLineTotal = (typeof lineTotal === 'number' && !isNaN(lineTotal) ? lineTotal : 0).toLocaleString();
+            
+            const itemElement = document.createElement('div');
+            itemElement.className = 'item-row';
+            
+            const img = document.createElement('img');
+            img.src = productImage;
+            img.alt = productName;
+            img.addEventListener('error', () => {
+                img.src = 'image/placeholder.png';
+            });
+            
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'item-details';
+            detailsDiv.textContent = productName;
+            
+            const priceDiv = document.createElement('div');
+            priceDiv.className = 'item-quantity-price';
+            priceDiv.innerHTML = `
+                <span class="quantity">x${item.quantity || item.qty || 1}</span>
+                <span class="price">₱ ${formattedLineTotal}</span>
+            `;
+            
+            itemElement.appendChild(img);
+            itemElement.appendChild(detailsDiv);
+            itemElement.appendChild(priceDiv);
+            itemsList.appendChild(itemElement);
+        });
+
+        // Update total price with the calculated total
+        document.getElementById('modal-total-price').textContent = `₱ ${(typeof calculatedTotal === 'number' && !isNaN(calculatedTotal) ? calculatedTotal : 0).toLocaleString()}`;
+        
+        // Show modal
+        modal.style.display = "block";
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    /**
+     * Closes the modal
+     */
+    function closeModal() {
+        modal.style.display = "none";
+        document.body.style.overflow = 'auto'; // Restore scrolling
+    }
+
+    /**
+     * Updates the order count badge in the navigation
+     */
+    function updateOrderBadge() {
+        const badgeElements = document.querySelectorAll('.badge');
+        // Count only recent orders (not completed)
+        const recentOrders = ordersData.filter(order => order.status !== 'Complete');
+        const orderCount = recentOrders.length;
+        
+        badgeElements.forEach(badge => {
+            badge.textContent = orderCount;
+        });
+    }
+    
+    /**
+     * Updates the notification dot based on unread notifications
+     */
+    function updateNotificationDot() {
+        const dot = document.getElementById('notificationDot');
+        if (!dot) return;
+        
+        try {
+            const notificationsRaw = localStorage.getItem('adminNotifications') || '[]';
+            const notifications = JSON.parse(notificationsRaw);
+            const unreadCount = notifications.filter(n => !n.read).length;
+            
+            if (unreadCount > 0) {
+                dot.classList.remove('hidden');
+                dot.setAttribute('data-count', unreadCount);
+            } else {
+                dot.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Error updating notification dot:', error);
+            dot.classList.add('hidden');
+        }
+    }
+    
+    /**
+     * Formats time for notifications
+     * @param {string} dateString - ISO date string
+     * @returns {string} Formatted time string
+     */
+    function formatNotificationTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diff = now - date;
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        
+        if (minutes < 1) return 'Just now';
+        if (minutes < 60) return `${minutes}m ago`;
+        if (hours < 24) return `${hours}h ago`;
+        if (days < 7) return `${days}d ago`;
+        return date.toLocaleDateString();
+    }
+    
+    /**
+     * Renders admin notifications in the overlay
+     */
+    function renderAdminNotifications() {
+        const list = document.getElementById('notificationsList');
+        const empty = document.getElementById('notificationsEmpty');
+        const markAllBtn = document.getElementById('markAllReadBtn');
+        
+        if (!list || !empty) return;
+        
+        try {
+            const notificationsRaw = localStorage.getItem('adminNotifications') || '[]';
+            const notifications = JSON.parse(notificationsRaw);
+            
+            list.innerHTML = '';
+            
+            if (notifications.length === 0) {
+                empty.style.display = 'block';
+                if (markAllBtn) markAllBtn.disabled = true;
+                return;
+            }
+            
+            empty.style.display = 'none';
+            if (markAllBtn) markAllBtn.disabled = false;
+            
+            notifications.forEach(notif => {
+                const li = document.createElement('li');
+                li.className = 'notification-item' + (notif.read ? '' : ' unread');
+                li.setAttribute('data-id', notif.id);
+                
+                const statusClass = notif.status === 'Complete' || notif.status === 'Ready for Pickup' ? 'success' : 
+                                  notif.status === 'Cancel' ? 'warning' : 'info';
+                const iconSymbol = notif.status === 'Complete' || notif.status === 'Ready for Pickup' ? '✓' : 
+                                 notif.status === 'Cancel' ? '⚠' : 'ℹ';
+                
+                li.innerHTML = `
+                    <div class="notification-icon ${statusClass}">${iconSymbol}</div>
+                    <div class="notification-content">
+                        <div class="notification-message">${notif.message}</div>
+                        <div class="notification-time">${formatNotificationTime(notif.timestamp)}</div>
+                    </div>
+                    <button class="notification-delete-btn" data-id="${notif.id}" title="Delete notification">
+                      <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                // Handle click on the notification (excluding delete button)
+                li.addEventListener('click', function(event) {
+                    // If the click was on the delete button, don't process the notification click
+                    if (event.target.closest('.notification-delete-btn')) {
+                        return;
+                    }
+                    
+                    markNotificationAsRead(notif.id);
+                    renderAdminNotifications();
+                    updateNotificationDot();
+                });
+                
+                list.appendChild(li);
+                
+                // Add event listener for the delete button
+                setTimeout(function() {
+                    const deleteBtn = li.querySelector('.notification-delete-btn');
+                    if (deleteBtn) {
+                        deleteBtn.addEventListener('click', function(event) {
+                            event.stopPropagation(); // Prevent the notification click event
+                            const notificationId = parseInt(deleteBtn.getAttribute('data-id'));
+                            if (notificationId) {
+                                deleteAdminNotification(notificationId);
+                                renderAdminNotifications();
+                                updateNotificationDot();
+                            }
+                        });
+                    }
+                }, 0);
+            });
+        } catch (error) {
+            console.error('Error rendering admin notifications:', error);
+            empty.style.display = 'block';
+            if (markAllBtn) markAllBtn.disabled = true;
+        }
+    }
+    
+    /**
+     * Marks a notification as read
+     * @param {number} notificationId - The ID of the notification to mark as read
+     */
+    function markNotificationAsRead(notificationId) {
+        try {
+            const notificationsRaw = localStorage.getItem('adminNotifications') || '[]';
+            const notifications = JSON.parse(notificationsRaw);
+            
+            const notification = notifications.find(n => n.id === notificationId);
+            if (notification) {
+                notification.read = true;
+                localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+            }
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+    }
+    
+    /**
+     * Marks all notifications as read
+     */
+    function markAllNotificationsAsRead() {
+        try {
+            const notificationsRaw = localStorage.getItem('adminNotifications') || '[]';
+            const notifications = JSON.parse(notificationsRaw);
+            
+            notifications.forEach(n => n.read = true);
+            localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+            
+            renderAdminNotifications();
+            updateNotificationDot();
+        } catch (error) {
+            console.error('Error marking all notifications as read:', error);
+        }
+    }
+    
+    /**
+     * Deletes a notification by ID
+     * @param {number} notificationId - The ID of the notification to delete
+     */
+    function deleteAdminNotification(notificationId) {
+        try {
+            const notificationsRaw = localStorage.getItem('adminNotifications') || '[]';
+            const notifications = JSON.parse(notificationsRaw);
+            
+            const filteredNotifications = notifications.filter(n => n.id !== notificationId);
+            localStorage.setItem('adminNotifications', JSON.stringify(filteredNotifications));
+            
+            console.log('Notification deleted:', notificationId);
+        } catch (error) {
+            console.error('Error deleting notification:', error);
+        }
+    }
+    
+    /**
+     * Deletes all notifications
+     */
+    function deleteAllAdminNotifications() {
+        try {
+            localStorage.setItem('adminNotifications', JSON.stringify([]));
+            renderAdminNotifications();
+            updateNotificationDot();
+            console.log('All notifications deleted');
+        } catch (error) {
+            console.error('Error deleting all notifications:', error);
+        }
+    }
+    
+    /**
+     * Opens the notifications overlay
+     */
+    function openNotifications() {
+        renderAdminNotifications();
+        updateNotificationDot();
+        const overlay = document.getElementById('notificationsOverlay');
+        if (overlay) {
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+    
+    /**
+     * Closes the notifications overlay
+     */
+    function closeNotifications() {
+        const overlay = document.getElementById('notificationsOverlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+    
+    // Close modal when the back arrow button is clicked
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+
+    // Close modal when user clicks outside of the modal
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal.style.display === 'block') {
+            closeModal();
+        }
+    });
+    
+    // Refresh orders periodically to catch updates
+    setInterval(() => {
+        // First sync customer orders to admin orders
+        syncCustomerOrdersToAdmin();
+        
+        // Reload orders from localStorage
+        const storedOrders = localStorage.getItem('ordersData');
+        if (storedOrders) {
+            try {
+                const newOrders = JSON.parse(storedOrders);
+                // Only update if the data has changed
+                if (JSON.stringify(newOrders) !== JSON.stringify(ordersData)) {
+                    ordersData = newOrders;
+                    renderOrders();
+                    updateOrderBadge(); // Update the order count badge
+                }
+            } catch (e) {
+                console.error('Error parsing stored orders data:', e);
+            }
+        }
+        
+        // Update notification dot
+        updateNotificationDot();
+    }, 5000); // Check every 5 seconds
+    
+    // Search functionality - attach after DOM is fully loaded
+    setTimeout(() => {
+        if (orderIdInput) {
+            // Search when typing in the input
+            orderIdInput.addEventListener('input', (e) => {
+                filterOrders(e.target.value);
+            });
+            
+            // Search when pressing Enter key
+            orderIdInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    filterOrders(orderIdInput.value);
+                    // Prevent form submission if it's inside a form
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        // Search when clicking search icon
+        if (searchIcon && orderIdInput) {
+            searchIcon.addEventListener('click', () => {
+                filterOrders(orderIdInput.value);
+            });
+        }
+        
+        // Search when clicking search button
+        if (searchBtn && orderIdInput) {
+            searchBtn.addEventListener('click', () => {
+                filterOrders(orderIdInput.value);
+            });
+        }
+        
+        // Search functionality for verification search bar
+        if (verificationOrderIdInput) {
+            // Search when typing in the verification input
+            verificationOrderIdInput.addEventListener('input', (e) => {
+                filterOrders(e.target.value);
+            });
+            
+            // Search when pressing Enter key in verification input
+            verificationOrderIdInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    filterOrders(verificationOrderIdInput.value);
+                    // Prevent form submission if it's inside a form
+                    e.preventDefault();
+                }
+            });
+        }
+        
+        // Scan button functionality
+        if (scanBtn) {
+            scanBtn.addEventListener('click', () => {
+                showPopup('QR Code scanning functionality would be implemented here.');
+            });
+        }
+    }, 200);
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    
+    // Sync customer orders to admin orders
+    syncCustomerOrdersToAdmin();
+    
+    // Initial render
+    renderOrders();
+    updateOrderBadge();
+    updateNotificationDot();
+    
+    // Add event listeners for notifications
+    document.addEventListener('DOMContentLoaded', function() {
+        const messagesIcon = document.getElementById('messagesIcon');
+        const closeBtn = document.getElementById('notificationsClose');
+        const markAllBtn = document.getElementById('markAllReadBtn');
+        const overlay = document.getElementById('notificationsOverlay');
+        
+        if (messagesIcon) {
+            messagesIcon.addEventListener('click', openNotifications);
+        }
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeNotifications);
+        }
+        
+        if (overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    closeNotifications();
+                }
+            });
+        }
+        
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', function() {
+                markAllNotificationsAsRead();
+            });
+        }
+        
+        // Add event listener for delete all button
+        const deleteAllBtn = document.getElementById('deleteAllNotificationsBtn');
+        if (deleteAllBtn) {
+            deleteAllBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete all notifications?')) {
+                    deleteAllAdminNotifications();
+                }
+            });
+        }
+        
+        // Add event listener for delete all orders button
+        const deleteAllOrdersBtn = document.getElementById('delete-all-orders-btn');
+        if (deleteAllOrdersBtn) {
+            deleteAllOrdersBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete all orders? This action cannot be undone.')) {
+                    deleteAllOrders();
+                }
+            });
+        }        
+        // Listen for Escape key to close notifications
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('notificationsOverlay');
+                if (overlay && overlay.classList.contains('active')) {
+                    closeNotifications();
+                }
+            }
+        });
+    });
+    
+    /**
+     * Sync customer orders (from localStorage.orders) to admin orders (localStorage.ordersData)
+     * This ensures that new customer orders automatically appear in the admin dashboard
+     */
+    function syncCustomerOrdersToAdmin() {
+        try {
+            // Get customer orders from localStorage
+            const customerOrdersRaw = localStorage.getItem('orders');
+            const customerOrders = customerOrdersRaw ? JSON.parse(customerOrdersRaw) : [];
+            
+            // Get admin orders from localStorage
+            const adminOrdersRaw = localStorage.getItem('ordersData');
+            let adminOrders = adminOrdersRaw ? JSON.parse(adminOrdersRaw) : [];
+            
+            // Keep track of existing admin order IDs to avoid duplicates
+            const existingAdminOrderIds = new Set(adminOrders.map(order => order.id));
+            
+            // Process each customer order
+            let newOrdersAdded = false;
+            customerOrders.forEach(customerOrder => {
+                // Skip if this order is already in admin orders
+                if (existingAdminOrderIds.has(customerOrder.id)) {
+                    return;
+                }
+                
+                // Convert customer order to admin order format
+                const adminOrder = convertCustomerOrderToAdminFormat(customerOrder);
+                
+                // Add to admin orders
+                adminOrders.push(adminOrder);
+                newOrdersAdded = true;
+                
+                console.log('Added new customer order to admin dashboard:', adminOrder.id);
+            });
+            
+            // Save updated admin orders if new orders were added
+            if (newOrdersAdded) {
+                localStorage.setItem('ordersData', JSON.stringify(adminOrders));
+                console.log('Synced customer orders to admin orders');
+                
+                // Update the ordersData array and refresh the display
+                ordersData = adminOrders;
+            }
+        } catch (error) {
+            console.error('Error syncing customer orders to admin:', error);
+        }
+    }
+    
+    /**
+     * Convert customer order format to admin order format
+     * @param {Object} customerOrder - The customer order object
+     * @returns {Object} The converted admin order object
+     */
+    function convertCustomerOrderToAdminFormat(customerOrder) {
+        // Get current date and time for the order
+        const orderDate = customerOrder.createdAt ? new Date(customerOrder.createdAt) : new Date();
+        const formattedDate = `${orderDate.getMonth() + 1}/${orderDate.getDate()}/${orderDate.getFullYear()}`;
+        const formattedTime = orderDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+        
+        // Map customer order to admin format
+        return {
+            id: customerOrder.id,
+            customerEmail: customerOrder.contact ? customerOrder.contact.email || customerOrder.contact.name || 'Unknown Customer' : 'Unknown Customer',
+            total: customerOrder.total || 0,
+            date: formattedDate,
+            time: formattedTime,
+            status: 'Pending', // New orders start as Pending
+            items: customerOrder.items || []
+        };
+    }
+    
+    /**
+     * Deletes all orders
+     */
+    function deleteAllOrders() {
+        try {
+            console.log('Deleting all orders...');
+            // Clear the ordersData array
+            ordersData = [];
+            
+            // Update localStorage
+            localStorage.setItem('ordersData', JSON.stringify(ordersData));
+            
+            // Re-render the orders list
+            renderOrders();
+            
+            // Update the order badge
+            updateOrderBadge();
+            
+            console.log('All orders deleted');
+        } catch (error) {
+            console.error('Error deleting all orders:', error);
+        }
+    }
+
+    // Add event listener for delete all orders button after DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteAllOrdersBtn = document.getElementById('delete-all-orders-btn');
+        if (deleteAllOrdersBtn) {
+            console.log('Delete all orders button found, attaching event listener');
+            deleteAllOrdersBtn.addEventListener('click', function() {
+                console.log('Delete all orders button clicked');
+                if (confirm('Are you sure you want to delete all orders? This action cannot be undone.')) {
+                    console.log('Confirmed deletion of all orders');
+                    deleteAllOrders();
+                } else {
+                    console.log('Cancelled deletion of all orders');
+                }
+            });
+        } else {
+            console.log('Delete all orders button not found');
+        }
+    });
+
+});

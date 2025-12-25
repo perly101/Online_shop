@@ -1,0 +1,71 @@
+// products.js — fallback for file:// preview. This defines window.PRODUCTS
+window.PRODUCTS = [
+  { id: 1, name: "Bear Brand 320g", price: 300.00, image: "bearbrand.jpg", description: "Rich and creamy powdered milk, fortified for everyday nutrition." },
+  { id: 2, name: "Tanduay Select", price: 160.00, image: "tanduay select.jpg", description: "Premium distilled rum with a smooth finish — great for celebrations." },
+  { 
+    id: 3, 
+    name: "Piattos 5 flavors", 
+    price: 15.00, 
+    image: "piattos.jpg", 
+    description: "Crispy corn snack available in five tasty flavors — perfect for sharing.",
+    variants: [
+      { flavor: "Barbecue", image: "barbecue piattos.jpg" },
+      { flavor: "Roast Beef", image: "roast beef piattos.jpg" },
+      { flavor: "Sour Cream", image: "sour cream piattos.jpg" },
+      { flavor: "Spicy Cheese", image: "spicy cheese piattos.jpg" }
+    ]
+  },
+  { 
+    id: 4, 
+    name: "Fudgee Bar", 
+    price: 98.00, 
+    image: "fudgee barr.jpg", 
+    description: "Soft chocolate-filled sponge cake — a delightful treat for kids and adults.",
+    variants: [
+      { flavor: "Chocolate", image: "chocolate fudgee bar.jpg" },
+      { flavor: "Milk", image: "milk fudgee bar.jpg" },
+      { flavor: "Vanilla", image: "vanilla fudgee bar.jpg" },
+      { flavor: "Red", image: "red fudgee bar.jpg" },
+      { flavor: "Durian", image: "durian  fudgee bar.jpg" },
+      { flavor: "Flavor Combo", image: "flavor combo fudgee bar.jpg" }
+    ]
+  },
+  { id: 5, name: "Coke mismo 290ml", price: 20.00, image: "coke mismo.jpg", description: "Refreshing cola in a convenient single-serve bottle." },
+  { 
+    id: 6, 
+    name: "Pancit Canton", 
+    price: 18.00, 
+    image: "pancit canton.jpg", 
+    description: "Instant noodles with savory seasoning for a quick and tasty meal.",
+    variants: [
+      { flavor: "Calamansi", image: "calamansi-pancit canton.jpg" },
+      { flavor: "Chilimansi", image: "chilimansi-pancit canton.jpg" },
+      { flavor: "Extra Hot", image: "extrahot-pancit canton.jpg" },
+      { flavor: "Sweet & Spicy", image: "sweet&spicy-pancit canton.jpg" }
+    ]
+  },
+  { id: 7, name: "Mega Sardines", price: 20.00, image: "mega sardines.jpg", description: "Tinned sardines in savory tomato sauce — a pantry essential." },
+  { id: 8, name: "Closeup Toothpaste", price: 72.00, image: "closeup toothpaste.jpg", description: "Antibacterial toothpaste for fresh breath and healthy gums." },
+  { id: 9, name: "Original Nescafe Twin", price: 150.00, image: "Original Nescafe Twin.jpg", description: "Instant coffee twin pack with rich aroma and a bold flavor." },
+  { id: 10, name: "Safeguard 85g", price: 35.00, image: "safeguard 85g.jpg", description: "Trusted antibacterial soap for gentle, effective cleansing." },
+  { id: 11, name: "Head & Shoulder", price: 77.00, image: "head & shoulder.jpg", description: "Anti-dandruff shampoo that cleanses and soothes the scalp." },
+  { id: 12, name: "Surf 65g", price: 55.00, image: "surf 65g.jpg", description: "Concentrated detergent for powerful cleaning in small packs." },
+  { id: 13, name: "Oishi Fish Crackers", price: 7.00, image: "fish crackers.jpg", description: "Crispy fish-flavored crackers with a savory taste — perfect for snacking anytime." },
+  { id: 14, name: "Oishi Patata", price: 7.00, image: "patata.jpg", description: "Crunchy potato chips with a delightful flavor — a classic snack favorite." },
+  { id: 15, name: "Oishi Rinbee", price: 7.00, image: "rinbee.jpg", description: "Light and crispy wheat crackers with a hint of sweetness — great for on-the-go snacking." },
+  { id: 16, name: "Oishi Kirei", price: 7.00, image: "kirei.jpg", description: "Delicious seaweed crackers with a rich umami flavor — a healthy and tasty treat." },
+  { id: 17, name: "Oishi Boogyman", price: 7.00, image: "boogyman.jpg", description: "Fun and flavorful snack crackers — perfect for kids and adults alike." },
+  {
+    id: 18,
+    name: "Lucky Me Noodles",
+    price: 9.00,
+    image: "luckey me noodles.jpg",
+    description: "Instant noodles available in three bold flavors — quick and satisfying meal solution.",
+    variants: [
+      { flavor: "Labuyo", image: "luckey me-labuyo.jpg" },
+      { flavor: "Chicken", image: "luckey me-chicken.jpg" },
+      { flavor: "Beef", image: "luckey me-beef.jpg" }
+    ]
+  },
+  { id: 19, name: "Corned Beef", price: 7.00, image: "corned beef.jpg", description: "Savory canned corned beef — ideal for quick meals and hearty recipes." }
+];
